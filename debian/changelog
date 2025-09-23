@@ -1,33 +1,103 @@
 xlibinput-calibrator (0.13) stable; urgency=medium
 
-  * update to upstream v0.13
+  * Better handling of multimonitor configuration
+  * Correct naming of the switch "--matrix" -> "--start-matrix"
 
- -- Goffredo Baroncelli <kreijack@libero.it>  26 Feb 2024 23:03:00 -0000
+ -- Goffredo Baroncelli <kreijack@libero.it>  Mon, 26 Feb 2024 00:00:00 +0000
 
 
 xlibinput-calibrator (0.12) stable; urgency=medium
 
-  * update to upstream v0.12
+  * If a touch is not found, try a device xi_mouse with calibration matrix
+  * Better error message
+  * Improve the README
 
- -- Goffredo Baroncelli <kreijack@libero.it>  30 Jun 2023 23:03:00 -0000
+ -- Goffredo Baroncelli <kreijack@libero.it>  Fri, 30 Jun 2023 00:00:00 +0000
 
 
 xlibinput-calibrator (0.11) stable; urgency=medium
 
-  * update to upstream v0.11
+  * Add copyright
+  * Better handling of missing $DISPLAY
+  * Document how avoid Xrandr
 
- -- Goffredo Baroncelli <kreijack@libero.it>  24 May 2023 23:03:00 -0000
+ -- Goffredo Baroncelli <kreijack@libero.it>  Mon, 01 May 2023 00:00:00 +0000
 
 
 xlibinput-calibrator (0.10) stable; urgency=medium
 
-  * update to upstream v0.10
+  * Replace the throw() with a printf() in the main()
+  * Select any device using --device-id or --device-name
+  * Select automatically the matrix calibration
 
- -- Goffredo Baroncelli <kreijack@libero.it>  Fri, 26 Nov 2021 19:00:00 -0000
+ -- Goffredo Baroncelli <kreijack@libero.it>  Fri, 26 Nov 2021 00:00:00 +0000
 
 
 xlibinput-calibrator (0.9) stable; urgency=medium
 
-  * debian directory created
+  * Small code clean up
+  * Add --list-devices command
+  * Add --matrix-name options
 
- -- Ali Riza KESKIN <aliriza.keskin@pardus.org.tr>  Fri, 26 Nov 2021 14:21:50 -0000
+ -- Goffredo Baroncelli <kreijack@libero.it>  Tue, 26 Oct 2021 00:00:00 +0000
+
+
+xlibinput-calibrator (0.8) stable; urgency=medium
+
+  * Bugfix: call XFlush to be sure that the setting are stored
+
+ -- Goffredo Baroncelli <kreijack@libero.it>  Fri, 28 May 2021 00:00:00 +0000
+
+
+xlibinput-calibrator (0.7) stable; urgency=medium
+
+  * Add make install target
+
+ -- Goffredo Baroncelli <kreijack@libero.it>  Tue, 26 Jan 2021 00:00:00 +0000
+
+
+xlibinput-calibrator (0.6) stable; urgency=medium
+
+  * Changed the man page format from nroff to a txt2man based
+  * Correct the handling of multi-monitor setup
+  * Add the --monitor-nr option
+
+ -- Goffredo Baroncelli <kreijack@libero.it>  Sun, 24 Jan 2021 00:00:00 +0000
+
+
+xlibinput-calibrator (0.5) stable; urgency=medium
+
+  * Set a the default value '1' for the doubleckick-threshold to avoid to compute invalid calibration matrix
+  * Switch from signal based event loop to a (more sane) real event loop based to select(2) syscall.
+  * Small code cleanup
+
+ -- Goffredo Baroncelli <kreijack@libero.it>  Tue, 19 Jan 2021 00:00:00 +0000
+
+
+xlibinput-calibrator (0.4) stable; urgency=medium
+
+  * Update makefile to handle the case where the .git directory doesn't exist
+
+ -- Goffredo Baroncelli <kreijack@libero.it>  Mon, 18 Jan 2021 00:00:00 +0000
+
+
+xlibinput-calibrator (0.3) stable; urgency=medium
+
+  * Update documentation
+  * Update copyright headers
+
+ -- Goffredo Baroncelli <kreijack@libero.it>  Sun, 17 Jan 2021 00:00:00 +0000
+
+
+xlibinput-calibrator (0.2) stable; urgency=medium
+
+  * Update documentation
+
+ -- Goffredo Baroncelli <kreijack@libero.it>  Mon, 30 Mar 2020 00:00:00 +0000
+
+
+xlibinput-calibrator (0.1) stable; urgency=medium
+
+  * First release
+
+ -- Goffredo Baroncelli <kreijack@libero.it>  Sun, 29 Mar 2020 00:00:00 +0000
