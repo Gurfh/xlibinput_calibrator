@@ -6,8 +6,7 @@ Build-Depends: libxrandr-dev,
                libxi-dev,
                libx11-dev,
                txt2man
-               
-Standards-Version: 4.3.0
+
 Homepage: https://github.com/kreijack/xlibinput_calibrator
 Package: xlibinput-calibrator
 Architecture: any
