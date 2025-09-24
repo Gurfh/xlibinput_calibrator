@@ -1,14 +1,33 @@
 name: Build and Deploy DEB Package
 
-on: push
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
-  build-debs:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: jtdor/build-deb-action@v1
-        env:
-          DEB_BUILD_OPTIONS: noautodbgsym
-        with:
-          buildpackage-opts: --build=binary --no-sign
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install build dependencies
+      run: sudo apt-get update && sudo apt-get install -y debhelper build-essential devscripts dpkg-dev
+
+    - name: Build DEB package
+      id: build-deb
+      uses: jtdor/build-deb-action@v1
+      env:
+        DEB_BUILD_OPTIONS: noautodbgsym
+      with:
+        buildpackage-opts: --build=binary --no-sign
+
+    - name: Upload DEB artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: xlibinput-calibrator
+        path: ${{ steps.build-deb.outputs.deb }}
+        if-no-files-found: error
