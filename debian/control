@@ -2,7 +2,8 @@ Source: xlibinput-calibrator
 Section: utils
 Priority: optional
 Maintainer: Ali Riza KESKIN <aliriza.keskin@pardus.org.tr>
-Build-Depends: libxrandr-dev,
+Build-Depends: debhelper (>= 7),
+               libxrandr-dev,
                libxi-dev,
                libx11-dev,
                txt2man
