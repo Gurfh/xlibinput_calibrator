@@ -14,12 +14,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Install build dependencies
+      run: sudo apt-get update && sudo apt-get install -y debhelper
+
     - name: Build DEB package
       id: build-deb
       uses: jtdor/build-deb-action@v1
       with:
         source_dir: .
         buildsystem: make
+        install_build_deps: true
 
     - name: Upload DEB artifact
       uses: actions/upload-artifact@v4
