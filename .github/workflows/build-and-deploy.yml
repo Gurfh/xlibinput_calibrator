@@ -1,0 +1,29 @@
+name: Build and Deploy DEB Package
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build DEB package
+      id: build-deb
+      uses: jtdor/build-deb-action@v1
+      with:
+        source_dir: .
+        buildsystem: make
+
+    - name: Upload DEB artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: xlibinput-calibrator
+        path: ${{ steps.build-deb.outputs.deb_file_path }}
+        if-no-files-found: error
