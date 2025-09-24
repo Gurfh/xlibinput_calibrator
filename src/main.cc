@@ -266,12 +266,12 @@ int main(int argc, char** argv)
 
     if (matrix_name == "") {
         for (auto i : lprops) {
-            if (i.first == LICALMATR) {
+            if (i.first == XICALMATR) {
                 matrix_name = i.first;
                 break;
-            } else if (i.first == XICALMATR && matrix_name == "") {
+            } else if (i.first == LICALMATR && matrix_name == "") {
                 matrix_name = i.first;
-                // no break, continue to search LICALMATR if available
+                // continue to search for XICALMATR, preferring it over LICALMATR
             }
         }
     } else {
