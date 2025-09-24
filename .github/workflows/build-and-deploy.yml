@@ -29,5 +29,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: xlibinput-calibrator
-        path: ${{ steps.build-deb.outputs.deb }}
+        path: ../xlibinput-calibrator_*.deb
         if-no-files-found: error
