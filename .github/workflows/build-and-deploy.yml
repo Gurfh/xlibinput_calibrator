@@ -26,7 +26,7 @@ jobs:
         buildpackage-opts: --build=binary --no-sign
 
     - name: Move DEB to workspace
-      run: ls ..
+      run: ls ../..
       
     - name: Upload DEB artifact
       uses: actions/upload-artifact@v4
