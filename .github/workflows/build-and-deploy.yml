@@ -25,9 +25,12 @@ jobs:
       with:
         buildpackage-opts: --build=binary --no-sign
 
+    - name: Move DEB to workspace
+      run: mv ../xlibinput-calibrator_*.deb .
+      
     - name: Upload DEB artifact
       uses: actions/upload-artifact@v4
       with:
         name: xlibinput-calibrator
-        path: ../xlibinput-calibrator_*.deb
+        path: xlibinput-calibrator_*.deb
         if-no-files-found: error
