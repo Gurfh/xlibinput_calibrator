@@ -22,9 +22,6 @@ jobs:
       with:
         buildpackage-opts: --build=binary --no-sign
         docker-image: debian:bullseye-slim
-
-    - name: Move DEB to workspace
-      run: ls debian/artifacts
       
     - name: Upload DEB artifact
       uses: actions/upload-artifact@v4
