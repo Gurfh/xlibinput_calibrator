@@ -21,6 +21,7 @@ jobs:
         DEB_BUILD_OPTIONS: noautodbgsym
       with:
         buildpackage-opts: --build=binary --no-sign
+        docker-image: debian:bullseye-slim
 
     - name: Move DEB to workspace
       run: ls debian/artifacts
