@@ -29,6 +29,8 @@
 #include <cstdlib>
 #include <cmath>
 #include <cassert>
+#include <vector>   // Added for reliability fix
+#include <numeric>  // Added for reliability fix
 
 #include "calibrator.hpp"
 
@@ -123,33 +125,89 @@ bool Calibrator::finish(int width, int height)
         return false;
     }
 
+    // ========================================================================
+    // NEW RELIABILITY FIX:
+    // Re-sort click points to logical corners (UL, UR, LL, LR)
+    // before feeding them to the matrix solver. This fixes errors
+    // caused by screen rotation or mirroring.
+    // ========================================================================
+
+    struct Point { int x, y; };
+    std::vector<Point> original_clicks(NUM_POINTS);
+    for (int i = 0; i < NUM_POINTS; ++i) {
+        original_clicks[i] = {clicked_x[i], clicked_y[i]};
+    }
+
+    // Calculate the center point
+    float avg_x = (original_clicks[0].x + original_clicks[1].x + original_clicks[2].x + original_clicks[3].x) / 4.0f;
+    float avg_y = (original_clicks[0].y + original_clicks[1].y + original_clicks[2].y + original_clicks[3].y) / 4.0f;
+
+    std::vector<int> new_clicked_x(NUM_POINTS);
+    std::vector<int> new_clicked_y(NUM_POINTS);
+
+    for (const auto& click : original_clicks) {
+        if (click.x < avg_x && click.y < avg_y) {
+            // Top-Left (UL)
+            new_clicked_x[UL] = click.x;
+            new_clicked_y[UL] = click.y;
+        } else if (click.x > avg_x && click.y < avg_y) {
+            // Top-Right (UR)
+            new_clicked_x[UR] = click.x;
+            new_clicked_y[UR] = click.y;
+        } else if (click.x < avg_x && click.y > avg_y) {
+            // Bottom-Left (LL)
+            new_clicked_x[LL] = click.x;
+            new_clicked_y[LL] = click.y;
+        } else if (click.x > avg_x && click.y > avg_y) {
+            // Bottom-Right (LR)
+            new_clicked_x[LR] = click.x;
+            new_clicked_y[LR] = click.y;
+        }
+    }
+
+    // Atomically update the member variables
+    clicked_x = new_clicked_x;
+    clicked_y = new_clicked_y;
+
+    if (verbose) {
+        printf("DEBUG: Re-sorted click points (X, Y):\n");
+        printf("DEBUG: UL: (%d, %d)\n", clicked_x[UL], clicked_y[UL]);
+        printf("DEBUG: UR: (%d, %d)\n", clicked_x[UR], clicked_y[UR]);
+        printf("DEBUG: LL: (%d, %d)\n", clicked_x[LL], clicked_y[LL]);
+        printf("DEBUG: LR: (%d, %d)\n", clicked_x[LR], clicked_y[LR]);
+    }
+    // ========================================================================
+    // END OF FIX
+    // ========================================================================
+
+
     /*
      * Assuming that
      *
-     *  [a  b  c]     [tx_i]     [sx_i]
-     *  [d  e  f]  x  [ty_i]  =  [sy_i]
-     *  [0  0  1]     [  1 ]     [ 1  ]
+     * [a  b  c]     [tx_i]     [sx_i]
+     * [d  e  f]  x  [ty_i]  =  [sy_i]
+     * [0  0  1]     [  1 ]     [ 1  ]
      *
-     *      ^          ^        ^
-     *      C          Ti       Si
+     * ^          ^        ^
+     * C          Ti       Si
      *
-     *  Where:
-     *   - a,b ...f      -> conversion matrix
-     *   - tx_i, ty_i    -> 'i'th touch x,y
-     *   - sx_i, sy_i    -> 'i'th screen x,y
-     *  this means:
+     * Where:
+     * - a,b ...f      -> conversion matrix
+     * - tx_i, ty_i    -> 'i'th touch x,y
+     * - sx_i, sy_i    -> 'i'th screen x,y
+     * this means:
      *
-     *            ⎡tx_1  tx_2  tx_3⎤     ⎡sx_1  sx_2  sx_3⎤
-     *            ⎢                ⎥     ⎢                ⎥
-     *        C x ⎢ty_1  ty_2  ty_3⎥  =  ⎢sy_1  sy_2  sy_3⎥
-     *            ⎢                ⎥     ⎢                ⎥
-     *            ⎣  1     1     1 ⎦     ⎣  1     1     1 ⎦
+     * ⎡tx_1  tx_2  tx_3⎤     ⎡sx_1  sx_2  sx_3⎤
+     * ⎢                ⎥     ⎢                ⎥
+     * C x ⎢ty_1  ty_2  ty_3⎥  =  ⎢sy_1  sy_2  sy_3⎥
+     * ⎢                ⎥     ⎢                ⎥
+     * ⎣  1     1     1 ⎦     ⎣  1     1     1 ⎦
      *
-     *            ⎡sx_1  sx_2  sx_3⎤     ⎡tx_1  tx_2  tx_3⎤ ^ -1
-     *            ⎢                ⎥     ⎢                ⎥
-     *        C = ⎢sy_1  sy_2  sy_3⎥  x  ⎢ty_1  ty_2  ty_3⎥
-     *            ⎢                ⎥     ⎢                ⎥
-     *            ⎣  1     1     1 ⎦     ⎣  1     1     1 ⎦
+     * ⎡sx_1  sx_2  sx_3⎤     ⎡tx_1  tx_2  tx_3⎤ ^ -1
+     * ⎢                ⎥     ⎢                ⎥
+     * C = ⎢sy_1  sy_2  sy_3⎥  x  ⎢ty_1  ty_2  ty_3⎥
+     * ⎢                ⎥     ⎢                ⎥
+     * ⎣  1     1     1 ⎦     ⎣  1     1     1 ⎦
      *
      */
 
@@ -213,7 +271,7 @@ bool Calibrator::finish(int width, int height)
     mat9_product(1.0/4.0, coeff);
 
     /*
-     *             Coefficient normalization
+     * Coefficient normalization
      *
      * The matrix to pass to libinput has to be normalized; we need to
      * translate and scale the coeffiecient so the matrix can operate in
@@ -223,53 +281,53 @@ bool Calibrator::finish(int width, int height)
      * To do that, assume:
      *
      * a "translation" matrix is
-     *       [ 1 0 dx ]
+     * [ 1 0 dx ]
      * Tr =  [ 0 1 dy ]
-     *       [ 0 0 1  ]
+     * [ 0 0 1  ]
      *
      * a "scale" matrix is
-     *       [ sx 0  0 ]
+     * [ sx 0  0 ]
      * Sc =  [ 0  sy 0 ]
-     *       [ 0  0  1 ]
+     * [ 0  0  1 ]
      *
      * To change the coordinate from the normalizate space to the screen space
      * - First we need to scale from (0..1 x 0..1) to (width x height); so
-     *   sx = maxx - minx + 1 = width, sy = maxy - miny + 1 = height
+     * sx = maxx - minx + 1 = width, sy = maxy - miny + 1 = height
      * - Second we need to translate
-     *   from (0..width-1 x 0..hight-1) to (minx..maxx x miny..maxy)
-     *   so dx = minx, dy = miny
+     * from (0..width-1 x 0..hight-1) to (minx..maxx x miny..maxy)
+     * so dx = minx, dy = miny
      *
      * So
-     *    C = Tr x Sc x Cn x Sc^-1 x Tc^-1
+     * C = Tr x Sc x Cn x Sc^-1 x Tc^-1
      * this means that
-     *    Cn = Sc^-1 x Tr^-1 x C x Tr x Sc
+     * Cn = Sc^-1 x Tr^-1 x C x Tr x Sc
      * where
-     *      C is the Calibration matrix in the "screen" spaces
-     *      Cn is the normalizated matrix that can be passed to libinput
+     * C is the Calibration matrix in the "screen" spaces
+     * Cn is the normalizated matrix that can be passed to libinput
      *
      * Because in the screen space usually minx=miny=0, this means
      * that dx == dy == 0 -> T == T^-1 == identity. So we can write
-     *      Cn = Sc^-1 x C x Sc
+     * Cn = Sc^-1 x C x Sc
      *
      *
      * and because
      *
-     *                ⎡a  b  c⎤
-     *                ⎢       ⎥
-     *        C   =   ⎢d  e  f⎥
-     *                ⎢       ⎥
-     *                ⎣0  0  1⎦
+     * ⎡a  b  c⎤
+     * ⎢       ⎥
+     * C   =   ⎢d  e  f⎥
+     * ⎢       ⎥
+     * ⎣0  0  1⎦
      *
      * then
-     *              ⎡      b⋅sy  c ⎤
-     *              ⎢ a    ────  ──⎥
-     *              ⎢       sx   sx⎥
-     *              ⎢              ⎥
-     *       Cn =   ⎢d⋅sx        f ⎥
-     *              ⎢────   e    ──⎥
-     *              ⎢ sy         sy⎥
-     *              ⎢              ⎥
-     *              ⎣ 0     0    1 ⎦
+     * ⎡      b⋅sy  c ⎤
+     * ⎢ a    ────  ──⎥
+     * ⎢       sx   sx⎥
+     * ⎢              ⎥
+     * Cn =   ⎢d⋅sx        f ⎥
+     * ⎢────   e    ──⎥
+     * ⎢ sy         sy⎥
+     * ⎢              ⎥
+     * ⎣ 0     0    1 ⎦
      *
      *
      *
@@ -277,15 +335,15 @@ bool Calibrator::finish(int width, int height)
      *
      * As further reference, if dx/dy are not zero:
      *
-     *              ⎡        b⋅sy            b⋅dy⋅sy   c      ⎤
-     *              ⎢ a      ────     a⋅dx + ─────── + ── - dx⎥
-     *              ⎢         sx                sx     sx     ⎥
-     *              ⎢                                         ⎥
-     *              ⎢d⋅sx             d⋅dx⋅sx               f ⎥
-     *       Cn =   ⎢────     e       ─────── + dy⋅e - dy + ──⎥
-     *              ⎢ sy                 sy                 sy⎥
-     *              ⎢                                         ⎥
-     *              ⎣ 0       0                  1            ⎦
+     * ⎡        b⋅sy            b⋅dy⋅sy   c      ⎤
+     * ⎢ a      ────     a⋅dx + ─────── + ── - dx⎥
+     * ⎢         sx                sx     sx     ⎥
+     * ⎢                                         ⎥
+     * ⎢d⋅sx             d⋅dx⋅sx               f ⎥
+     * Cn =   ⎢────     e       ─────── + dy⋅e - dy + ──⎥
+     * ⎢ sy                 sy                 sy⎥
+     * ⎢                                         ⎥
+     * ⎣ 0       0                  1            ⎦
      */
 
     coeff[1] *= (float)height/width;
